@@ -2,7 +2,7 @@
 
 > 순천향대학교 컴퓨터공학과 2학년 주민식이 개발한 Minecraft 서버 실시간 모니터링 대시보드
 
-![대시보드 미리보기](https://i.imgur.com/placeholder.png)
+![대시보드 미리보기](docs/dashboard.png)
 
 ## 📌 프로젝트 소개
 
