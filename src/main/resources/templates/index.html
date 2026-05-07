@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>컴공서버 대시보드</title>
+    <meta http-equiv="refresh" content="30">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+            min-height: 100vh;
+            color: #eee;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            padding: 30px;
+        }
+        h1 {
+            color: #4ecca3;
+            font-size: 2rem;
+            margin-bottom: 30px;
+            text-shadow: 0 0 20px rgba(78, 204, 163, 0.5);
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+        .card {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(78, 204, 163, 0.2);
+            border-radius: 16px;
+            padding: 24px;
+            backdrop-filter: blur(10px);
+            transition: transform 0.2s;
+        }
+        .card:hover { transform: translateY(-3px); }
+        .card h2 {
+            color: #4ecca3;
+            font-size: 1rem;
+            margin-bottom: 16px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .status-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        .dot {
+            width: 10px; height: 10px;
+            border-radius: 50%;
+            background: #4ecca3;
+            box-shadow: 0 0 8px #4ecca3;
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+        .stat {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+        .stat:last-child { border-bottom: none; }
+        .stat-label { color: #aaa; font-size: 0.9rem; }
+        .stat-value { color: #fff; font-weight: bold; }
+        .player-list { display: flex; flex-direction: column; gap: 8px; }
+        .player-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 10px;
+            padding: 10px 14px;
+        }
+        .player-avatar {
+            width: 36px; height: 36px;
+            border-radius: 6px;
+            background: linear-gradient(135deg, #4ecca3, #302b63);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 0.9rem;
+        }
+        .player-name { font-weight: bold; }
+        .online-badge {
+            margin-left: auto;
+            font-size: 0.75rem;
+            background: rgba(78, 204, 163, 0.2);
+            color: #4ecca3;
+            padding: 3px 8px;
+            border-radius: 20px;
+        }
+        .no-players {
+            color: #aaa;
+            text-align: center;
+            padding: 20px;
+            font-size: 0.9rem;
+        }
+        .notice-item {
+            display: flex;
+            gap: 10px;
+            padding: 10px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+        .notice-item:last-child { border-bottom: none; }
+        .notice-icon { font-size: 1.2rem; }
+        .notice-text { font-size: 0.9rem; color: #ccc; }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 12px;
+        }
+        .stats-card {
+            background: rgba(255,255,255,0.05);
+            border-radius: 10px;
+            padding: 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .stats-card .player-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .stats-card .info {
+            font-size: 0.8rem;
+            color: #aaa;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            padding-left: 2px;
+        }
+        .stats-card .info span {
+            color: #eee;
+        }
+        .stats-card .info .highlight {
+            color: #4ecca3;
+        }
+        .refresh-info {
+            text-align: right;
+            color: #555;
+            font-size: 0.75rem;
+            margin-top: 20px;
+        }
+        .full-width {
+            grid-column: 1 / -1;
+        }
+    </style>
+</head>
+<body>
+<h1>🎮 컴공서버 대시보드</h1>
+
+<div class="grid">
+    <!-- 서버 상태 -->
+    <div class="card">
+        <h2>⚡ 서버 상태</h2>
+        <div class="status-row">
+            <div class="dot"></div>
+            <span>온라인</span>
+        </div>
+        <div class="stat">
+            <span class="stat-label">포트</span>
+            <span class="stat-value">25565</span>
+        </div>
+        <div class="stat">
+            <span class="stat-label">주소</span>
+            <span class="stat-value">minsic.feathermc.gg</span>
+        </div>
+        <div class="stat">
+            <span class="stat-label">버전</span>
+            <span class="stat-value">1.21.4</span>
+        </div>
+    </div>
+
+    <!-- 접속 중인 플레이어 -->
+    <div class="card">
+        <h2>👥 접속 중인 플레이어</h2>
+        <div class="player-list">
+            <div th:if="${playerList.contains('실패')}">
+                <p class="no-players">⚠️ 서버 연결 중...</p>
+            </div>
+            <div th:unless="${playerList.contains('실패')}">
+                <div th:if="${playerList.contains('There are 0')}">
+                    <p class="no-players">😴 현재 접속 중인 플레이어가 없어요</p>
+                </div>
+                <div th:unless="${playerList.contains('There are 0')}">
+                    <p class="no-players">🟢 플레이어 접속 중</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 공지사항 -->
+    <div class="card">
+        <h2>📢 공지사항</h2>
+        <div class="notice-item">
+            <span class="notice-icon">🔧</span>
+            <span class="notice-text">서버 점검 없음 — 24시간 운영 중</span>
+        </div>
+        <div class="notice-item">
+            <span class="notice-icon">🎉</span>
+            <span class="notice-text">컴공서버에 오신 것을 환영합니다!</span>
+        </div>
+        <div class="notice-item">
+            <span class="notice-icon">📌</span>
+            <span class="notice-text">규칙을 지키고 즐거운 게임 하세요</span>
+        </div>
+    </div>
+
+    <!-- 플레이어 통계 -->
+    <div class="card full-width">
+        <h2>📊 플레이어 통계</h2>
+        <div th:if="${#lists.isEmpty(playerStats)}">
+            <p class="no-players">📭 기록된 플레이어가 없어요</p>
+        </div>
+        <div th:unless="${#lists.isEmpty(playerStats)}" class="stats-grid">
+            <div th:each="p : ${playerStats}" class="stats-card">
+                <div class="player-header">
+                    <div class="player-avatar" th:text="${p.nickname.substring(0,1).toUpperCase()}"></div>
+                    <span class="player-name" th:text="${p.nickname}"></span>
+                </div>
+                <div class="info">
+                    <div>🕐 마지막 접속: <span th:text="${p.lastSeen}"></span></div>
+                    <div>⏱ 총 플레이: <span class="highlight" th:text="${p.totalPlayTime}"></span></div>
+                    <div>🔁 접속 횟수: <span th:text="${p.loginCount} + '회'"></span></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<p class="refresh-info">30초마다 자동 새로고침</p>
+</body>
+</html>
